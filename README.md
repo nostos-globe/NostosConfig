@@ -1,10 +1,10 @@
-# 📌 Configuración del Servidor - Raspberry Pi 5
+#  Configuración del Servidor - Raspberry Pi 5
 
 Este repositorio contiene la configuración y scripts necesarios para desplegar y administrar la infraestructura del servidor en una **Raspberry Pi 5** utilizando **Docker, Cloudflare Tunnel y GitHub Actions**.
 
 ---
 
-## 🚀 **Características**
+## **Características**
 ✔ Despliegue automatizado con **Docker Compose**.  
 ✔ Uso de **Cloudflare Tunnel** para redirigir tráfico sin exponer la IP.  
 ✔ Imágenes Docker alojadas en **GitHub Container Registry (GHCR.io)**.  
@@ -155,14 +155,4 @@ jobs:
             docker run -d --name auth-service -p 8081:8081 ghcr.io/usuario/auth-service:latest
 ```
 📌 **Cada push a `main` en un microservicio actualizará automáticamente su contenedor en la Raspberry Pi.**
-
----
-
-## 🚀 **Conclusión**
-✅ Con este repositorio puedes desplegar y administrar toda la infraestructura en Raspberry Pi 5.  
-✅ Cloudflare Tunnel protege la conexión sin exponer puertos.  
-✅ GitHub Actions permite CI/CD automático para cada microservicio.  
-✅ Watchtower mantiene los contenedores actualizados automáticamente.  
-
-🔥 **Con esta configuración, tienes una infraestructura robusta, automatizada y escalable.** 🚀
 
