@@ -2,6 +2,10 @@
 
 Este repositorio contiene la configuración y scripts necesarios para desplegar y administrar la infraestructura del servidor en una **Raspberry Pi 5** utilizando **Docker, Cloudflare Tunnel y GitHub Actions**.
 
+
+## **Arquitectura**
+![Sin titulo-2025-02-02-2053](https://github.com/user-attachments/assets/c6bde141-1749-43af-a587-58dcb20208b4)
+
 ---
 
 ## **Características**
