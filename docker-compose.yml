@@ -1,161 +1,164 @@
-version: '3.8'
+version: '3.9'
 
 services:
+  # API Gateway (Traefik)
   traefik:
     image: traefik:v2.10
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./traefik/traefik.yml:/etc/traefik/traefik.yml
-      - ./traefik/acme.json:/acme.json
-    networks:
-      - backend
     command:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-
-  auth-service:
-    image: ghcr.io/usuario/auth-service:latest
-    restart: always
-    networks:
-      - backend
-    environment:
-      - DATABASE_URL=postgres://user:password@postgres:5432/auth_db
-    depends_on:
-      - postgres
-
-  user-service:
-    image: ghcr.io/usuario/user-service:latest
-    restart: always
-    networks:
-      - backend
-    environment:
-      - DATABASE_URL=postgres://user:password@postgres:5432/user_db
-    depends_on:
-      - postgres
-
-  album-service:
-    image: ghcr.io/usuario/album-service:latest
-    restart: always
-    networks:
-      - backend
-    environment:
-      - DATABASE_URL=postgres://user:password@postgres:5432/album_db
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=admin
-      - MINIO_SECRET_KEY=adminpassword
-    depends_on:
-      - postgres
-      - minio
-
-  likes-service:
-    image: ghcr.io/usuario/likes-service:latest
-    restart: always
-    networks:
-      - backend
-    environment:
-      - DATABASE_URL=postgres://user:password@postgres:5432/likes_db
-      - REDIS_HOST=redis
-    depends_on:
-      - postgres
-      - redis
-
-  notification-service:
-    image: ghcr.io/usuario/notification-service:latest
-    restart: always
-    networks:
-      - backend
-    environment:
-      - MESSAGE_BROKER_URL=nats://nats:4222
-    depends_on:
-      - nats
-
-  postgres:
-    image: postgres:15
-    restart: always
-    networks:
-      - backend
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=app_db
-    volumes:
-      - ./database:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
-
-  redis:
-    image: redis:latest
-    restart: always
-    networks:
-      - backend
-    ports:
-      - "6379:6379"
-
-  minio:
-    image: minio/minio
-    restart: always
-    networks:
-      - backend
-    environment:
-      - MINIO_ROOT_USER=admin
-      - MINIO_ROOT_PASSWORD=adminpassword
-    command: server /data
-    volumes:
-      - ./minio-data:/data
-    ports:
-      - "9000:9000"
-
-  nats:
-    image: nats:latest
-    restart: always
-    networks:
-      - backend
-    ports:
-      - "4222:4222"
-
-  prometheus:
-    image: prom/prometheus
-    restart: always
-    networks:
-      - backend
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
-
-  grafana:
-    image: grafana/grafana
-    restart: always
-    networks:
-      - backend
-    volumes:
-      - ./monitoring/grafana:/var/lib/grafana
-    ports:
-      - "3000:3000"
-
-  loki:
-    image: grafana/loki
-    restart: always
-    networks:
-      - backend
-    volumes:
-      - ./monitoring/loki-config.yml:/etc/loki/loki-config.yml
-    ports:
-      - "3100:3100"
-
-  watchtower:
-    image: containrrr/watchtower
-    restart: always
+      - "80:80"
+      - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 300 --cleanup
+    networks:
+      - traefik
+
+  # # Auth Service
+  # auth-service:
+  #   image: my-auth-service:latest
+  #   environment:
+  #     - DATABASE_URL=postgres://auth_user:auth_pass@postgres/auth_db
+  #   labels:
+  #     - "traefik.http.routers.auth.rule=Host(`auth.localhost`)"
+  #   networks:
+  #     - backend
+  #     - traefik
+  #   depends_on:
+  #     - postgres
+
+  # # User Service
+  # user-service:
+  #   image: my-user-service:latest
+  #   environment:
+  #     - DATABASE_URL=postgres://user_user:user_pass@postgres/user_db
+  #   labels:
+  #     - "traefik.http.routers.user.rule=Host(`user.localhost`)"
+  #   networks:
+  #     - backend
+  #     - traefik
+  #   depends_on:
+  #     - postgres
+
+  # # Album Service
+  # album-service:
+  #   image: my-album-service:latest
+  #   environment:
+  #     - DATABASE_URL=postgres://album_user:album_pass@postgres/album_db
+  #   labels:
+  #     - "traefik.http.routers.album.rule=Host(`album.localhost`)"
+  #   networks:
+  #     - backend
+  #     - traefik
+  #   depends_on:
+  #     - postgres
+  #     - minio
+
+  # # Likes Service
+  # likes-service:
+  #   image: my-likes-service:latest
+  #   environment:
+  #     - REDIS_HOST=redis
+  #   labels:
+  #     - "traefik.http.routers.likes.rule=Host(`likes.localhost`)"
+  #   networks:
+  #     - backend
+  #     - traefik
+  #   depends_on:
+  #     - redis
+
+  # # Notification Service
+  # notification-service:
+  #   image: my-notification-service:latest
+  #   labels:
+  #     - "traefik.http.routers.notifications.rule=Host(`notifications.localhost`)"
+  #   networks:
+  #     - backend
+  #     - traefik
+  #   depends_on:
+  #     - redis
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: main_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  # Redis for Caching
+  redis:
+    image: redis:7
+    networks:
+      - backend
+
+  # MinIO for File Storage
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - backend
+
+  # Vault for Secrets Management
+  vault:
+    image: hashicorp/vault
+    cap_add:
+      - IPC_LOCK
+    environment:
+      - VAULT_DEV_ROOT_TOKEN_ID=myroot
+    ports:
+      - "8200:8200"
+    networks:
+      - backend
+
+  # Prometheus for Monitoring
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+
+  # Grafana for Visualization
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+  # Loki for Log Aggregation
+  loki:
+    image: grafana/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - monitoring
 
 networks:
+  traefik:
   backend:
-    driver: bridge
+  monitoring:
+
+
+volumes:
+  postgres_data:
+  minio_data:
