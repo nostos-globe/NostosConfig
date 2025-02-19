@@ -149,6 +149,7 @@ services:
   # Auth Service
    auth-service:
      image: ghcr.io/nostos-globe/auth-service:latest
+     container_name: auth-service
   #   environment:
   #     - DATABASE_URL=postgres://auth_user:auth_pass@postgres/auth_db
      labels:
