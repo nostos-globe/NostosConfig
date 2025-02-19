@@ -4,104 +4,48 @@ services:
   # API Gateway (Traefik)
   traefik:
     image: traefik:v2.10
+    container_name: traefik
     command:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
     ports:
-      - "80:80"
+      - "801:80"
+      - "443:443"
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      - traefik
-
-  # # Auth Service
-  # auth-service:
-  #   image: my-auth-service:latest
-  #   environment:
-  #     - DATABASE_URL=postgres://auth_user:auth_pass@postgres/auth_db
-  #   labels:
-  #     - "traefik.http.routers.auth.rule=Host(`auth.localhost`)"
-  #   networks:
-  #     - backend
-  #     - traefik
-  #   depends_on:
-  #     - postgres
-
-  # # User Service
-  # user-service:
-  #   image: my-user-service:latest
-  #   environment:
-  #     - DATABASE_URL=postgres://user_user:user_pass@postgres/user_db
-  #   labels:
-  #     - "traefik.http.routers.user.rule=Host(`user.localhost`)"
-  #   networks:
-  #     - backend
-  #     - traefik
-  #   depends_on:
-  #     - postgres
-
-  # # Album Service
-  # album-service:
-  #   image: my-album-service:latest
-  #   environment:
-  #     - DATABASE_URL=postgres://album_user:album_pass@postgres/album_db
-  #   labels:
-  #     - "traefik.http.routers.album.rule=Host(`album.localhost`)"
-  #   networks:
-  #     - backend
-  #     - traefik
-  #   depends_on:
-  #     - postgres
-  #     - minio
-
-  # # Likes Service
-  # likes-service:
-  #   image: my-likes-service:latest
-  #   environment:
-  #     - REDIS_HOST=redis
-  #   labels:
-  #     - "traefik.http.routers.likes.rule=Host(`likes.localhost`)"
-  #   networks:
-  #     - backend
-  #     - traefik
-  #   depends_on:
-  #     - redis
-
-  # # Notification Service
-  # notification-service:
-  #   image: my-notification-service:latest
-  #   labels:
-  #     - "traefik.http.routers.notifications.rule=Host(`notifications.localhost`)"
-  #   networks:
-  #     - backend
-  #     - traefik
-  #   depends_on:
-  #     - redis
+      - nostos-network
 
   # PostgreSQL Database
   postgres:
     image: postgres:15
+    container_name: postgres
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root
       POSTGRES_DB: main_db
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - backend
+      - nostos-network
 
   # Redis for Caching
   redis:
     image: redis:7
+    container_name: redis
     networks:
-      - backend
+      - nostos-network
 
   # MinIO for File Storage
   minio:
     image: minio/minio
     command: server /data --console-address ":9001"
+    container_name: minio
     environment:
       - MINIO_ROOT_USER=minioadmin
       - MINIO_ROOT_PASSWORD=minioadmin
@@ -111,11 +55,12 @@ services:
       - "9000:9000"
       - "9001:9001"
     networks:
-      - backend
+      - nostos-network
 
   # Vault for Secrets Management
   vault:
     image: hashicorp/vault
+    container_name: vault
     cap_add:
       - IPC_LOCK
     environment:
@@ -123,42 +68,148 @@ services:
     ports:
       - "8200:8200"
     networks:
-      - backend
+      - nostos-network
+
+  # Nginx for serving SolarSystem static files
+#  nginx-solarsystem:
+ #   image: nginx
+  #  container_name: nginx-solarsystem
+   # volumes:
+    #  - /var/www/solarsystem:/usr/share/nginx/html
+ #   networks:
+ #     - nostos-network
+
+
+  # Nginx for serving Clinica static files
+  #nginx-clinica:
+   # image: nginx
+   # container_name: nginx-clinica
+   # volumes:
+   #   - /var/www/html:/usr/share/nginx/html
+   # networks:
+   #   - nostos-network
+
+
 
   # Prometheus for Monitoring
   prometheus:
     image: prom/prometheus
+    container_name: prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
     networks:
-      - monitoring
+      - nostos-network
 
   # Grafana for Visualization
   grafana:
     image: grafana/grafana
+    container_name: grafana
     ports:
       - "3000:3000"
     networks:
-      - monitoring
+      - nostos-network
     depends_on:
       - prometheus
 
   # Loki for Log Aggregation
   loki:
-    image: grafana/loki
+    image: grafana/loki:latest
     ports:
       - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
     networks:
-      - monitoring
+      - nostos-network
+
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - /var/log:/var/log
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - nostos-network
+
+  # CloudBeaver Database UI
+  cloudbeaver:
+    image: dbeaver/cloudbeaver
+    container_name: cloudbeaver
+    ports:
+      - "8978:8978"
+    volumes:
+      - cloudbeaver_data:/opt/cloudbeaver/workspace
+    environment:
+      - CB_SERVER_PORT=8978
+    networks:
+      - nostos-network
+    depends_on:
+      - postgres
+
+  # Commented out custom services
+  # Auth Service
+   auth-service:
+     image: ghcr.io/nostos-globe/auth-service:latest
+  #   environment:
+  #     - DATABASE_URL=postgres://auth_user:auth_pass@postgres/auth_db
+     labels:
+       - "traefik.http.routers.auth.rule=Host(`auth.nostos-globe.me`)"
+     networks:
+       - nostos-network
+     depends_on:
+       - postgres
+
+  # User Service
+  # user-service:
+  #   image: my-user-service:latest
+  #   environment:
+  #     - DATABASE_URL=postgres://user_user:user_pass@postgres/user_db
+  #   labels:
+  #     - "traefik.http.routers.user.rule=Host(`user.nostos-globe.me`)"
+  #   networks:
+  #     - nostos-network
+  #   depends_on:
+  #     - postgres
+
+  # Album Service
+  # album-service:
+  #   image: my-album-service:latest
+  #   environment:
+  #     - DATABASE_URL=postgres://album_user:album_pass@postgres/album_db
+  #   labels:
+  #     - "traefik.http.routers.album.rule=Host(`album.nostos-globe.me`)"
+  #   networks:
+  #     - nostos-network
+  #   depends_on:
+  #     - postgres
+  #     - minio
+
+  # Likes Service
+  # likes-service:
+  #   image: my-likes-service:latest
+  #   environment:
+  #     - REDIS_HOST=redis
+  #   labels:
+  #     - "traefik.http.routers.likes.rule=Host(`likes.nostos-globe.me`)"
+  #   networks:
+  #     - nostos-network
+  #   depends_on:
+  #     - redis
+
+  # Notification Service
+  # notification-service:
+  #   image: my-notification-service:latest
+  #   labels:
+  #     - "traefik.http.routers.notifications.rule=Host(`notifications.nostos-globe.me`)"
+  #   networks:
+  #     - nostos-network
+  #   depends_on:
+  #     - redis
 
 networks:
-  traefik:
-  backend:
-  monitoring:
-
+  nostos-network:
 
 volumes:
   postgres_data:
   minio_data:
+  cloudbeaver_data:
+  loki_data:
