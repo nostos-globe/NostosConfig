@@ -1,6 +1,4 @@
-Here's the full English translation of your `README.md` for the **Raspberry Pi 5 Server Configuration** project:
 
-```markdown
 # Raspberry Pi 5 - Server Configuration
 
 This repository contains the configuration and scripts needed to deploy and manage server infrastructure on a **Raspberry Pi 5** using **Docker, Cloudflare Tunnel, and GitHub Actions**.
@@ -8,7 +6,8 @@ This repository contains the configuration and scripts needed to deploy and mana
 ---
 
 ## **Architecture**
-![Untitled-2025-02-02-2053](https://github.com/user-attachments/assets/c6bde141-1749-43af-a587-58dcb20208b4)
+![Sin titulo-2025-05-07-2301(1)](https://github.com/user-attachments/assets/2be8a1c2-1821-4f73-bf7a-81d67ddecd3a)
+
 
 ---
 
