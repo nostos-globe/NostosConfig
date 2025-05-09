@@ -11,7 +11,7 @@ services:
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
     ports:
-      - "801:80"
+      - "80:80"
       - "443:443"
       - "8080:8080"
     volumes:
@@ -19,14 +19,55 @@ services:
     networks:
       - nostos-network
 
+  # clinica-front-sf:
+  #   build:
+  #     args:
+  #       VITE_API_URL: http://clinica-backend/api
+  #   image: clinica-front
+  #   container_name: clinica-frontend
+  #   ports:
+  #     - "3001:80"  # Host port 3000 for frontend
+  #   
+  # clinica-back-sf:
+  #   image: clinica-back
+  #   restart: always
+  #   ports:
+  #    - "5000:5000"
+  #   environment:
+  #     DB_HOST: 192.168.1.41
+  #     DB_PORT: 3306
+  #     DB_USER: clinica
+  #     DB_PASSWORD: clinica
+  #     DB_NAME: clinica
+  #     JWT_SECRET: ASJDNUASBFUASNDKLASNDJKASNDJKASDNJKASNDAS
+  #     MAIL_USER: noreply.clinica@gmail.com
+  #     MAIL_PASS: hmrdyidigtmarrgc
+  #     CLIENT_URL: http://localhost:5173
+  # 
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: mysql-db
+  #   restart: always
+  #   ports:
+  #    - "3306:3306"
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: 124578
+  #     MYSQL_DATABASE: clinica
+  #     MYSQL_USER: root
+  #     MYSQL_PASSWORD: 124578
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   networks:
+  #     - nostos-network
+  
   # PostgreSQL Database
   postgres:
     image: postgres:15
     container_name: postgres
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: main_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB}
     ports:
       - "5432:5432"
     volumes:
@@ -47,8 +88,8 @@ services:
     command: server /data --console-address ":9001"
     container_name: minio
     environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
     ports:
@@ -57,6 +98,45 @@ services:
     networks:
       - nostos-network
 
+  # PostFix as SMTP Server
+  postfix:
+    build:
+      context: ./postfix
+    container_name: postfix
+    hostname: mail
+    domainname: nostos-globe.me
+    restart: always
+    ports:
+      - "2525:25"
+    environment:
+      - MAILNAME=${MAILNAME}
+      - MYNETWORKS=${MYNETWORKS}
+    volumes:
+       - ./postfix/main.cf:/etc/postfix/main.cf
+       - ./postfix/sasl_passwd:/etc/postfix/sasl_passwd
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+
+  nats:
+    image: nats:latest
+    container_name: nats
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    restart: always
+
+  ntfy:
+    image: binwiederhier/ntfy
+    container_name: ntfy
+    command: serve
+    ports:
+      - "8095:80"
+    volumes:
+      - ./ntfy:/etc/ntfy
+      - ./ntfy/cache:/var/cache/ntfy
+    restart: always
+
   # Vault for Secrets Management
   vault:
     image: hashicorp/vault
@@ -64,32 +144,15 @@ services:
     cap_add:
       - IPC_LOCK
     environment:
-      - VAULT_DEV_ROOT_TOKEN_ID=myroot
+      - VAULT_DEV_ROOT_TOKEN_ID=${VAULT_DEV_ROOT_TOKEN_ID}
     ports:
       - "8200:8200"
+    volumes:
+      - ./vault/config:/vault/config
+      - ./vault/raft:/vault/raft
+    command: vault server -config=/vault/config/config.hcl
     networks:
       - nostos-network
-
-  # Nginx for serving SolarSystem static files
-#  nginx-solarsystem:
- #   image: nginx
-  #  container_name: nginx-solarsystem
-   # volumes:
-    #  - /var/www/solarsystem:/usr/share/nginx/html
- #   networks:
- #     - nostos-network
-
-
-  # Nginx for serving Clinica static files
-  #nginx-clinica:
-   # image: nginx
-   # container_name: nginx-clinica
-   # volumes:
-   #   - /var/www/html:/usr/share/nginx/html
-   # networks:
-   #   - nostos-network
-
-
 
   # Prometheus for Monitoring
   prometheus:
@@ -116,16 +179,22 @@ services:
   # Loki for Log Aggregation
   loki:
     image: grafana/loki:latest
+    container_name: loki
     ports:
       - "3100:3100"
+    volumes:
+      - loki_data:/loki
     command: -config.file=/etc/loki/local-config.yaml
     networks:
       - nostos-network
 
+  # Promtail for Log Forwarding
   promtail:
     image: grafana/promtail:latest
+    container_name: promtail
     volumes:
       - /var/log:/var/log
+      - ./promtail-config.yml:/etc/promtail/config.yml
     command: -config.file=/etc/promtail/config.yml
     networks:
       - nostos-network
@@ -140,71 +209,142 @@ services:
       - cloudbeaver_data:/opt/cloudbeaver/workspace
     environment:
       - CB_SERVER_PORT=8978
+      - CB_ADMIN=${CB_ADMIN}
+      - CB_PASSWORD=${CB_PASSWORD}
     networks:
       - nostos-network
     depends_on:
       - postgres
 
-  # Commented out custom services
+  # Landing Page
+  landing-page:
+    image: ghcr.io/nostos-globe/landing-page:latest
+    container_name: landing-page
+    platform: linux/arm64
+    ports:
+      - "8080:80"
+    labels:
+      - "traefik.http.routers.auth.rule=Host(`nostos-globe.me`)"
+    networks:
+      - nostos-network
+
   # Auth Service
-   auth-service:
-     image: ghcr.io/nostos-globe/auth-service:latest
-     container_name: auth-service
-  #   environment:
-  #     - DATABASE_URL=postgres://auth_user:auth_pass@postgres/auth_db
-     labels:
-       - "traefik.http.routers.auth.rule=Host(`auth.nostos-globe.me`)"
-     networks:
-       - nostos-network
-     depends_on:
-       - postgres
+  auth-service:
+    image: ghcr.io/nostos-globe/auth-service:latest
+    container_name: auth-service
+    platform: linux/arm64
+    ports:
+      - "8082:8082"
+    environment:
+      - VAULT_TOKEN=${VAULT_TOKEN}
+      - VAULT_ADDR=${VAULT_ADDR}
+    labels:
+      - "traefik.http.routers.auth.rule=Host(`auth.nostos-globe.me`)"
+    networks:
+      - nostos-network
+    depends_on:
+      - postgres
 
-  # User Service
-  # user-service:
-  #   image: my-user-service:latest
-  #   environment:
-  #     - DATABASE_URL=postgres://user_user:user_pass@postgres/user_db
-  #   labels:
-  #     - "traefik.http.routers.user.rule=Host(`user.nostos-globe.me`)"
-  #   networks:
-  #     - nostos-network
-  #   depends_on:
-  #     - postgres
+  profile-service:
+    image: ghcr.io/nostos-globe/profile-service:latest
+    container_name: profile-service
+    platform: linux/arm64
+    ports:
+      - "8083:8083"
+    environment:
+      - VAULT_TOKEN=${VAULT_TOKEN}
+      - VAULT_ADDR=${VAULT_ADDR}
+    labels:
+      - "traefik.http.routers.auth.rule=Host(`profile.nostos-globe.me`)"
+    networks:
+      - nostos-network
+    depends_on:
+      - postgres
 
-  # Album Service
-  # album-service:
-  #   image: my-album-service:latest
-  #   environment:
-  #     - DATABASE_URL=postgres://album_user:album_pass@postgres/album_db
-  #   labels:
-  #     - "traefik.http.routers.album.rule=Host(`album.nostos-globe.me`)"
-  #   networks:
-  #     - nostos-network
-  #   depends_on:
-  #     - postgres
-  #     - minio
+  trips-service:
+    image: ghcr.io/nostos-globe/trips-service:latest
+    container_name: trips-service
+    platform: linux/arm64
+    ports:
+      - "8084:8084"
+    environment:
+      - VAULT_TOKEN=${VAULT_TOKEN}
+      - VAULT_ADDR=${VAULT_ADDR}
+    labels:
+      - "traefik.http.routers.auth.rule=Host(`trips.nostos-globe.me`)"
+    networks:
+      - nostos-network
+    depends_on:
+      - postgres
 
-  # Likes Service
-  # likes-service:
-  #   image: my-likes-service:latest
-  #   environment:
-  #     - REDIS_HOST=redis
-  #   labels:
-  #     - "traefik.http.routers.likes.rule=Host(`likes.nostos-globe.me`)"
-  #   networks:
-  #     - nostos-network
-  #   depends_on:
-  #     - redis
+  album-service:
+    image: ghcr.io/nostos-globe/album-service:latest
+    container_name: album-service
+    platform: linux/arm64
+    ports:
+      - "8085:8085"
+    environment:
+      - VAULT_TOKEN=${VAULT_TOKEN}
+      - VAULT_ADDR=${VAULT_ADDR}
+    labels:
+      - "traefik.http.routers.auth.rule=Host(`albums.nostos-globe.me`)"
+    networks:
+      - nostos-network
+    depends_on:
+      - postgres
 
-  # Notification Service
-  # notification-service:
-  #   image: my-notification-service:latest
-  #   labels:
-  #     - "traefik.http.routers.notifications.rule=Host(`notifications.nostos-globe.me`)"
-  #   networks:
-  #     - nostos-network
-  #   depends_on:
-  #     - redis
+  actions-service:
+    image: ghcr.io/nostos-globe/actions-service:latest
+    container_name: actions-service
+    platform: linux/arm64
+    ports:
+      - "8086:8086"
+    environment:
+      - VAULT_TOKEN=${VAULT_TOKEN}
+      - VAULT_ADDR=${VAULT_ADDR}
+    labels:
+      - "traefik.http.routers.auth.rule=Host(`actions.nostos-globe.me`)"
+    networks:
+      - nostos-network
+    depends_on:
+      - postgres
+
+  email-service:
+    image: ghcr.io/nostos-globe/email-service:latest
+    container_name: email-service
+    platform: linux/arm64
+    ports:
+      - "8087:8087"
+    environment:
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_FROM=${SMTP_FROM}
+      - SMTP_FROM_NAME=${SMTP_FROM_NAME}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - NATS_URL=${NATS_URL}
+      - VAULT_TOKEN=${VAULT_TOKEN}
+      - VAULT_ADDR=${VAULT_ADDR}
+    labels:
+      - "traefik.http.routers.auth.rule=Host(`email.nostos-globe.me`)"
+    networks:
+      - nostos-network
+    depends_on:
+      - postgres
+
+#  database-service:
+#    image: ghcr.io/nostos-globe/database-service:latest
+#    container_name: database-service
+#    platform: linux/arm64
+#    environment:
+#      - VAULT_TOKEN=myroot
+#      - VAULT_ADDR=https://vault.nostos-globe.me
+#    labels:
+#      - "traefik.http.routers.auth.rule=Host(`db.nostos-globe.me`)"
+#    networks:
+#      - nostos-network
+#    depends_on:
+#      - postgres
 
 networks:
   nostos-network:

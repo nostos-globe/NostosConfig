@@ -23,17 +23,14 @@ This repository contains the configuration and scripts needed to deploy and mana
 
 ## 📂 **Repository Structure**
 ```
-
 📦 config-repo
-├── 📄 docker-compose.yml  # Infrastructure and shared services definition
-├── 📄 .env                 # Environment variables (do not share publicly)
-├── 📂 cloudflare/          # Cloudflare Tunnel configuration
-├── 📂 monitoring/          # Prometheus, Grafana, and Loki config
-├── 📂 database/            # PostgreSQL initial setup
-├── 📄 deploy.sh            # Installation and deployment script
-├── 📄 README.md            # Repository documentation
-
-````
+├── 📄 docker-compose.yml  # Main Docker Compose file (8.3 KB)
+├── 📄 prometheus.yml      # Prometheus configuration file
+├── 📄 promtail-config.yml # Promtail (Loki) config file
+├── 📂 ntfy/               # Notification service configuration
+├── 📂 postfix/            # Email server configuration
+├── 📂 vault/              # Secret management and HashiCorp Vault
+└── 📄 README.md           # Repository documentation
 
 ---
 
