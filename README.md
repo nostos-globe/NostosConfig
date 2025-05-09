@@ -1,84 +1,100 @@
-#  Configuración del Servidor - Raspberry Pi 5
+Here's the full English translation of your `README.md` for the **Raspberry Pi 5 Server Configuration** project:
 
-Este repositorio contiene la configuración y scripts necesarios para desplegar y administrar la infraestructura del servidor en una **Raspberry Pi 5** utilizando **Docker, Cloudflare Tunnel y GitHub Actions**.
+```markdown
+# Raspberry Pi 5 - Server Configuration
 
-
-## **Arquitectura**
-![Sin titulo-2025-02-02-2053](https://github.com/user-attachments/assets/c6bde141-1749-43af-a587-58dcb20208b4)
-
----
-
-## **Características**
-✔ Despliegue automatizado con **Docker Compose**.  
-✔ Uso de **Cloudflare Tunnel** para redirigir tráfico sin exponer la IP.  
-✔ Imágenes Docker alojadas en **GitHub Container Registry (GHCR.io)**.  
-✔ **Watchtower** para actualización automática de contenedores.  
-✔ Monitorización con **Prometheus, Grafana y Loki**.  
+This repository contains the configuration and scripts needed to deploy and manage server infrastructure on a **Raspberry Pi 5** using **Docker, Cloudflare Tunnel, and GitHub Actions**.
 
 ---
 
-## 📂 **Estructura del Repositorio**
+## **Architecture**
+![Untitled-2025-02-02-2053](https://github.com/user-attachments/assets/c6bde141-1749-43af-a587-58dcb20208b4)
+
+---
+
+## **Features**
+✔ Automated deployment with **Docker Compose**  
+✔ Use of **Cloudflare Tunnel** to route traffic without exposing the IP address  
+✔ Docker images hosted on **GitHub Container Registry (GHCR.io)**  
+✔ **Watchtower** for automatic container updates  
+✔ Monitoring with **Prometheus, Grafana, and Loki**  
+
+---
+
+## 📂 **Repository Structure**
 ```
+
 📦 config-repo
- ├── 📄 docker-compose.yml  # Definición de infraestructura y servicios compartidos
- ├── 📄 .env                 # Variables de entorno (no compartir en público)
- ├── 📂 cloudflare/          # Configuración del túnel Cloudflare
- ├── 📂 monitoring/          # Configuración de Prometheus, Grafana y Loki
- ├── 📂 database/            # Configuración inicial de PostgreSQL
- ├── 📄 deploy.sh            # Script de instalación y despliegue
- ├── 📄 README.md            # Documentación del repositorio
-```
+├── 📄 docker-compose.yml  # Infrastructure and shared services definition
+├── 📄 .env                 # Environment variables (do not share publicly)
+├── 📂 cloudflare/          # Cloudflare Tunnel configuration
+├── 📂 monitoring/          # Prometheus, Grafana, and Loki config
+├── 📂 database/            # PostgreSQL initial setup
+├── 📄 deploy.sh            # Installation and deployment script
+├── 📄 README.md            # Repository documentation
+
+````
 
 ---
 
-## 🛠️ **Instalación del Servidor**
-### 🔹 **1. Clonar este repositorio en la Raspberry Pi**
-```bash
-git clone https://github.com/tu-usuario/config-repo.git ~/config-repo
-cd ~/config-repo
-```
+## 🛠️ **Server Installation**
 
-### 🔹 **2. Ejecutar el Script de Instalación**
+### 🔹 **1. Clone this repository on the Raspberry Pi**
+```bash
+git clone https://github.com/your-user/config-repo.git ~/config-repo
+cd ~/config-repo
+````
+
+### 🔹 **2. Run the installation script**
+
 ```bash
 chmod +x deploy.sh
 ./deploy.sh
 ```
-📌 **Este script:**  
-✅ Instala **Docker y Docker Compose**.  
-✅ Configura **Cloudflare Tunnel**.  
-✅ Descarga y ejecuta los servicios con **Docker Compose**.  
+
+📌 **This script:**
+✅ Installs **Docker and Docker Compose**
+✅ Sets up the **Cloudflare Tunnel**
+✅ Downloads and runs services with **Docker Compose**
 
 ---
 
-## 🛠️ **Servicios Incluidos**
-| **Servicio**           | **Puerto** | **Descripción** |
-|----------------------|-----------|----------------|
-| **API Gateway (Traefik)** | 80/443 | Balanceo de carga y enrutamiento |
-| **Auth Service** | 8081 | Autenticación y JWT |
-| **User Service** | 8082 | Perfiles y seguidores |
-| **Album Service** | 8083 | Álbumes y fotos |
-| **Likes Service** | 8084 | Sistema de likes |
-| **Notification Service** | 8085 | Notificaciones en tiempo real |
-| **PostgreSQL** | 5432 | Base de datos principal |
-| **Redis** | 6379 | Caché para mejorar rendimiento |
-| **MinIO** | 9000 | Almacenamiento de imágenes/videos |
-| **NATS/Mosquitto** | 4222 | Message Broker para eventos |
-| **Prometheus** | 9090 | Monitoreo del sistema |
-| **Grafana** | 3000 | Visualización de métricas |
-| **Loki** | 3100 | Logging centralizado |
+## 🛠️ **Included Services**
+
+| **Service**               | **Port** | **Description**            |
+| ------------------------- | -------- | -------------------------- |
+| **API Gateway (Traefik)** | 80/443   | Load balancing and routing |
+| **Auth Service**          | 8081     | Authentication and JWT     |
+| **User Service**          | 8082     | Profiles and followers     |
+| **Album Service**         | 8083     | Albums and photos          |
+| **Likes Service**         | 8084     | Like system                |
+| **Notification Service**  | 8085     | Real-time notifications    |
+| **PostgreSQL**            | 5432     | Main database              |
+| **Redis**                 | 6379     | Cache for performance      |
+| **MinIO**                 | 9000     | Image/video storage        |
+| **NATS/Mosquitto**        | 4222     | Message broker for events  |
+| **Prometheus**            | 9090     | System monitoring          |
+| **Grafana**               | 3000     | Metrics visualization      |
+| **Loki**                  | 3100     | Centralized logging        |
 
 ---
 
-## 🌐 **Configuración de Cloudflare Tunnel**
-### 🔹 **1. Iniciar sesión en Cloudflare Tunnel**
+## 🌐 **Cloudflare Tunnel Configuration**
+
+### 🔹 **1. Log into Cloudflare Tunnel**
+
 ```bash
 cloudflared tunnel login
 ```
-### 🔹 **2. Crear y configurar el túnel**
+
+### 🔹 **2. Create and configure the tunnel**
+
 ```bash
 cloudflared tunnel create nostos-tunnel
 ```
-### 🔹 **3. Configurar el tráfico en `/etc/cloudflared/config.yml`**
+
+### 🔹 **3. Configure traffic in `/etc/cloudflared/config.yml`**
+
 ```yaml
 tunnel: nostos-tunnel
 credentials-file: /etc/cloudflared/nostos-tunnel.json
@@ -87,7 +103,9 @@ ingress:
     service: http://localhost:80
   - service: http_status:404
 ```
-### 🔹 **4. Iniciar el túnel automáticamente**
+
+### 🔹 **4. Enable tunnel to start automatically**
+
 ```bash
 sudo systemctl enable cloudflared
 sudo systemctl start cloudflared
@@ -95,43 +113,57 @@ sudo systemctl start cloudflared
 
 ---
 
-## 🔄 **Automatización de Actualizaciones con Watchtower**
-Para actualizar los contenedores automáticamente cuando haya nuevas versiones en **GitHub Container Registry**:
+## 🔄 **Automatic Updates with Watchtower**
+
+To automatically update containers when new versions are pushed to **GitHub Container Registry**:
+
 ```bash
 docker run -d --name watchtower \
   -v /var/run/docker.sock:/var/run/docker.sock \
   containrrr/watchtower --interval 300 --cleanup
 ```
-📌 **Watchtower revisará cada 5 minutos si hay nuevas imágenes y las actualizará automáticamente.**
+
+📌 **Watchtower will check every 5 minutes for updates and apply them automatically.**
 
 ---
 
-## 🛠️ **Administración de Contenedores**
-### 📌 **Ver todos los contenedores en ejecución**
+## 🛠️ **Container Management**
+
+### 📌 **View all running containers**
+
 ```bash
 docker ps
 ```
-### 📌 **Reiniciar un contenedor específico**
+
+### 📌 **Restart a specific container**
+
 ```bash
 docker restart auth-service
 ```
-### 📌 **Detener y eliminar un contenedor**
+
+### 📌 **Stop and remove a container**
+
 ```bash
 docker stop auth-service && docker rm auth-service
 ```
-### 📌 **Actualizar manualmente un contenedor desde GitHub Container Registry**
+
+### 📌 **Manually update a container from GitHub Container Registry**
+
 ```bash
-docker pull ghcr.io/usuario/auth-service:latest
+docker pull ghcr.io/your-user/auth-service:latest
 docker stop auth-service
 docker rm auth-service
-docker run -d --name auth-service -p 8081:8081 ghcr.io/usuario/auth-service:latest
+docker run -d --name auth-service -p 8081:8081 ghcr.io/your-user/auth-service:latest
 ```
 
 ---
 
-## 📌 **CI/CD con GitHub Actions**
-Cada microservicio tiene su propio repositorio y GitHub Actions automatiza el despliegue.
-### **Ejemplo de Workflow de CI/CD (`.github/workflows/deploy.yml`)**
+## 📌 **CI/CD with GitHub Actions**
+
+Each microservice has its own repository, and GitHub Actions automates deployment.
+
+### **Example CI/CD Workflow (`.github/workflows/deploy.yml`)**
+
 ```yaml
 name: Deploy Auth Service
 
@@ -144,7 +176,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Acceder a Raspberry Pi via SSH
+      - name: Access Raspberry Pi via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_IP }}
@@ -153,10 +185,15 @@ jobs:
           script: |
             cd ~/services/auth-service
             git pull origin main
-            docker pull ghcr.io/usuario/auth-service:latest
+            docker pull ghcr.io/your-user/auth-service:latest
             docker stop auth-service || true
             docker rm auth-service || true
-            docker run -d --name auth-service -p 8081:8081 ghcr.io/usuario/auth-service:latest
+            docker run -d --name auth-service -p 8081:8081 ghcr.io/your-user/auth-service:latest
 ```
-📌 **Cada push a `main` en un microservicio actualizará automáticamente su contenedor en la Raspberry Pi.**
 
+📌 **Each push to `main` in a microservice repo will automatically update its container on the Raspberry Pi.**
+
+```
+
+Would you like this exported as a `.md` file or need help localizing it for a GitHub repository?
+```
