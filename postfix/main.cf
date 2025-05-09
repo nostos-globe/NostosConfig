@@ -1,0 +1,33 @@
+# Basic Postfix config
+myhostname = mail.nostos-globe.me
+mydomain = nostos-globe.me
+myorigin = $mydomain
+inet_interfaces = all
+inet_protocols = ipv4
+mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain
+
+# Relay config (Mailgun EU)
+relayhost = [smtp.eu.mailgun.org]:587
+smtp_use_tls = yes
+smtp_tls_security_level = encrypt
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+
+# Allow everything (for now) from Docker
+mynetworks = 0.0.0.0/0
+
+# TLS for incoming mail (optional, not needed if only sending)
+smtpd_banner = $myhostname ESMTP Nostos Mail
+smtpd_tls_cert_file = /etc/ssl/certs/ssl-cert-snakeoil.pem
+smtpd_tls_key_file = /etc/ssl/private/ssl-cert-snakeoil.key
+smtpd_use_tls = yes
+
+# Disable incoming SASL (we only send)
+smtpd_sasl_auth_enable = no
+
+# Accept mail from inside only
+smtpd_recipient_restrictions = permit_mynetworks, reject_unauth_destination
+sender_canonical_maps = hash:/etc/postfix/sender_canonical
+smtp_generic_maps = hash:/etc/postfix/generic

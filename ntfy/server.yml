@@ -1,0 +1,8 @@
+base-url: "http://localhost:8095"
+listen-http: ":80"
+access-control-file: "/etc/ntfy/access.yml"
+auth-file: "/etc/ntfy/user.db"
+cache-file: "/var/cache/ntfy/cache.db"
+attachment-cache-dir: "/var/cache/ntfy/attachments"
+behind-proxy: true
+enable-login: true

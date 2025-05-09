@@ -1,0 +1,6 @@
+topics:
+  testing:
+    read:
+      - ntfyuser
+    write:
+      - ntfyuser
